@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Expense Tracker</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <h1>Expense Tracker</h1>
+
+    <div class="menu">⋮
+      <div class="dropdown">
+        <p onclick="logout()">Logout</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- INSIGHT -->
+  <div id="insight" class="card insight"></div>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <select id="monthFilter">
+      <option value="all">All Time</option>
+    </select>
+
+    <button onclick="clearAll()">Clear Data</button>
+    <button onclick="exportCSV()">Export CSV</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="dashboard">
+
+    <!-- LEFT -->
+    <div class="left">
+
+      <div class="card balance-card">
+        <h3>Balance</h3>
+        <h1 id="balance">£0.00</h1>
+      </div>
+
+      <div class="summary">
+        <div class="card income">
+          <h4>Income</h4>
+          <p id="income">£0.00</p>
+        </div>
+
+        <div class="card expense">
+          <h4>Expense</h4>
+          <p id="expense">£0.00</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <form id="form">
+          <input type="text" id="text" placeholder="Description" required>
+          <input type="number" id="amount" placeholder="Amount" required>
+
+          <select id="type">
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+          </select>
+
+          <select id="category">
+            <option value="food">Food</option>
+            <option value="travel">Travel</option>
+            <option value="necessities">Necessities</option>
+            <option value="unwanted">Unwanted</option>
+          </select>
+
+          <button>Add Transaction</button>
+        </form>
+      </div>
+
+    </div>
+
+    <!-- RIGHT -->
+    <div class="right">
+
+      <div class="card">
+        <h3>Income vs Expense</h3>
+        <canvas id="chart1"></canvas>
+      </div>
+
+      <div class="card">
+        <h3>Spending by Category</h3>
+        <canvas id="chart2"></canvas>
+      </div>
+
+      <div class="card">
+        <h3>Transactions</h3>
+        <ul id="list"></ul>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

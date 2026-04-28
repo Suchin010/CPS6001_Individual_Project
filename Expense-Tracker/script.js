@@ -4,11 +4,11 @@ if (localStorage.getItem("loggedIn") !== "true") {
 
 const form = document.getElementById("form");
 const list = document.getElementById("list");
-const monthFilter = document.getElementById("monthFilter");
 
 let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
 
-// FORMAT MONEY
+let chart1, chart2;
+
 function formatMoney(amount) {
   return new Intl.NumberFormat("en-GB", {
     style: "currency",
@@ -16,164 +16,135 @@ function formatMoney(amount) {
   }).format(amount);
 }
 
-// ADD TRANSACTION
-form.addEventListener("submit", e => {
+function showTab(tab) {
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
+
+  document.getElementById(tab).classList.add("active");
+  event.target.classList.add("active");
+}
+
+function toggleCategory() {
+  const type = document.getElementById("type").value;
+  document.getElementById("category").style.display =
+    type === "income" ? "none" : "block";
+}
+
+form.addEventListener("submit", function(e) {
   e.preventDefault();
+
+  const textInput = document.getElementById("text");
+  const amountInput = document.getElementById("amount");
+  const type = document.getElementById("type").value;
+  const category = document.getElementById("category").value;
 
   const transaction = {
     id: Date.now(),
-    text: text.value,
-    amount: type.value === "expense" ? -amount.value : +amount.value,
-    category: category.value,
-    date: new Date().toISOString()
+    text: textInput.value,
+    amount: type === "expense" ? -amountInput.value : +amountInput.value,
+    category: type === "income" ? "income" : category
   };
 
   transactions.push(transaction);
-  update();
+  localStorage.setItem("transactions", JSON.stringify(transactions));
+
+  textInput.value = "";
+  amountInput.value = "";
+
+  render();
 });
 
-// FILTER BY MONTH
-function getFilteredTransactions() {
-  if (monthFilter.value === "all") return transactions;
-
-  return transactions.filter(t => {
-    const d = new Date(t.date);
-    return d.getMonth() == monthFilter.value;
-  });
-}
-
-// UPDATE UI
-function update() {
-  localStorage.setItem("transactions", JSON.stringify(transactions));
-  populateMonths();
-  render();
-}
-
-// POPULATE MONTH DROPDOWN
-function populateMonths() {
-  monthFilter.innerHTML = `<option value="all">All Time</option>`;
-  const months = [...new Set(transactions.map(t => new Date(t.date).getMonth()))];
-
-  months.forEach(m => {
-    monthFilter.innerHTML += `<option value="${m}">Month ${m+1}</option>`;
-  });
-}
-
-// RENDER
 function render() {
   list.innerHTML = "";
 
-  const filtered = getFilteredTransactions();
-
-  let total = 0, income = 0, expense = 0;
+  let income = 0, expense = 0;
   let categories = {food:0, travel:0, necessities:0, unwanted:0};
 
-  filtered.forEach(t => {
-    total += +t.amount;
-    t.amount > 0 ? income += +t.amount : expense += +t.amount;
-
-    if (t.amount < 0) categories[t.category] += Math.abs(t.amount);
+  transactions.forEach(t => {
+    if (t.amount > 0) income += t.amount;
+    else {
+      expense += t.amount;
+      categories[t.category] += Math.abs(t.amount);
+    }
 
     const li = document.createElement("li");
 
     li.innerHTML = `
-      ${t.text} (${t.category})
-      <small>${new Date(t.date).toLocaleDateString()}</small>
-      <span>${formatMoney(t.amount)}</span>
-      <button onclick="deleteTransaction(${t.id})">X</button>
+      <div class="transaction-left">
+        <strong>${t.text}</strong>
+        <small>${t.category}</small>
+      </div>
+
+      <div class="transaction-right">
+        <span class="${t.amount > 0 ? 'green' : 'red'}">
+          ${formatMoney(t.amount)}
+        </span>
+        <button onclick="deleteTransaction(${t.id})">✕</button>
+      </div>
     `;
 
     list.appendChild(li);
   });
 
-  balance.innerText = formatMoney(total);
-  incomeEl.innerText = formatMoney(income);
-  expenseEl.innerText = formatMoney(Math.abs(expense));
+  document.getElementById("income").innerText = formatMoney(income);
+  document.getElementById("expense").innerText = formatMoney(Math.abs(expense));
+  document.getElementById("balance").innerText = formatMoney(income + expense);
 
   drawCharts(income, Math.abs(expense), categories);
-  generateInsight(categories, expense);
+  generateInsights(categories, Math.abs(expense));
 }
 
-// DELETE
-function deleteTransaction(id){
+function deleteTransaction(id) {
   transactions = transactions.filter(t => t.id !== id);
-  update();
+  localStorage.setItem("transactions", JSON.stringify(transactions));
+  render();
 }
 
-// CLEAR ALL
-function clearAll(){
-  if(confirm("Delete all data?")){
-    transactions = [];
-    update();
-  }
-}
-
-// EXPORT CSV
-function exportCSV(){
-  let csv = "Text,Category,Amount,Date\n";
-
-  transactions.forEach(t => {
-    csv += `${t.text},${t.category},${t.amount},${t.date}\n`;
-  });
-
-  const blob = new Blob([csv], { type: "text/csv" });
-  const link = document.createElement("a");
-
-  link.href = URL.createObjectURL(blob);
-  link.download = "expenses.csv";
-  link.click();
-}
-
-// CHARTS
-function drawCharts(income, expense, categories){
-
-  if(window.chart1) chart1.destroy();
-  if(window.chart2) chart2.destroy();
+function drawCharts(income, expense, categories) {
+  if (chart1) chart1.destroy();
+  if (chart2) chart2.destroy();
 
   chart1 = new Chart(document.getElementById("chart1"), {
     type: "doughnut",
     data: {
-      labels:["Income","Expense"],
-      datasets:[{data:[income,expense]}]
+      labels: ["Income", "Expense"],
+      datasets: [{ data: [income, expense] }]
     }
   });
 
   chart2 = new Chart(document.getElementById("chart2"), {
     type: "bar",
     data: {
-      labels:["Food","Travel","Necessities","Unwanted"],
-      datasets:[{data:Object.values(categories)}]
+      labels: ["Food","Travel","Necessities","Unwanted"],
+      datasets: [{ data: Object.values(categories) }]
     }
   });
 }
 
-// SMART INSIGHTS
-function generateInsight(categories, expense){
+function generateInsights(categories, expense) {
+  if (expense === 0) return;
+
   const max = Math.max(...Object.values(categories));
   const top = Object.keys(categories).find(k => categories[k] === max);
 
-  if(expense === 0){
-    insight.innerText = "No expenses yet.";
-    return;
-  }
+  const monthly = (max * 0.2).toFixed(2);
+  const yearly = (monthly * 12).toFixed(2);
+  const daily = (expense / 30).toFixed(2);
 
-  const percent = ((max / expense) * 100).toFixed(1);
+  document.getElementById("topCategory").innerHTML =
+    `<h3>Top Spending</h3><p>${top}</p>`;
 
-  if(percent > 50){
-    insight.innerText = `Warning: ${percent}% of your spending is on ${top}.`;
-  } else {
-    insight.innerText = `Top spending: ${top} (${percent}%).`;
-  }
+  document.getElementById("savingTip").innerHTML =
+    `<h3>Savings Potential</h3><p>£${monthly}/month (£${yearly}/year)</p>`;
+
+  document.getElementById("dailyTip").innerHTML =
+    `<h3>Daily Habit</h3><p>Save £${daily}/day</p>`;
 }
 
-// EVENTS
-monthFilter.addEventListener("change", render);
-
-// LOGOUT
-function logout(){
+function logout() {
   localStorage.removeItem("loggedIn");
-  window.location.href="login.html";
+  window.location.href = "login.html";
 }
 
-// INIT
-update();
+render();
+toggleCategory();

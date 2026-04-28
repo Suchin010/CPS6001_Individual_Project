@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Expense Tracker</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta charset="UTF-8">
+<title>Expense Tracker</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -15,55 +15,59 @@
   <div class="header">
     <h1>Expense Tracker</h1>
 
-    <div class="menu">⋮
-      <div class="dropdown">
-        <p onclick="logout()">Logout</p>
+    <div class="menu">
+      ⋮
+      <div class="dropdown"><p onclick="logout()">Logout</p>
       </div>
     </div>
   </div>
 
-  <!-- INSIGHT -->
-  <div id="insight" class="card insight"></div>
-
-  <!-- CONTROLS -->
-  <div class="controls">
-    <select id="monthFilter">
-      <option value="all">All Time</option>
-    </select>
-
-    <button onclick="clearAll()">Clear Data</button>
-    <button onclick="exportCSV()">Export CSV</button>
+  <!-- TABS -->
+  <div class="tabs">
+    <button onclick="showTab('dashboard')" class="active">Dashboard</button>
+    <button onclick="showTab('transactions')">Transactions</button>
+    <button onclick="showTab('insights')">Insights</button>
   </div>
 
   <!-- DASHBOARD -->
-  <div class="dashboard">
+  <div id="dashboard" class="tab active">
 
-    <!-- LEFT -->
-    <div class="left">
-
-      <div class="card balance-card">
-        <h3>Balance</h3>
-        <h1 id="balance">£0.00</h1>
+    <div class="cards">
+      <div class="card income">
+        <h4>Income</h4>
+        <p id="income">£0.00</p>
       </div>
 
-      <div class="summary">
-        <div class="card income">
-          <h4>Income</h4>
-          <p id="income">£0.00</p>
-        </div>
-
-        <div class="card expense">
-          <h4>Expense</h4>
-          <p id="expense">£0.00</p>
-        </div>
+      <div class="card expense">
+        <h4>Expense</h4>
+        <p id="expense">£0.00</p>
       </div>
 
-      <div class="card">
-        <form id="form">
+      <div class="card balance">
+        <h4>Balance</h4>
+        <p id="balance">£0.00</p>
+      </div>
+    </div>
+
+    <div class="charts">
+      <div class="card"><canvas id="chart1"></canvas></div>
+      <div class="card"><canvas id="chart2"></canvas></div>
+    </div>
+
+  </div>
+
+  <!-- TRANSACTIONS -->
+  <div id="transactions" class="tab">
+
+    <div class="form-card">
+      <form id="form">
+        <div class="row">
           <input type="text" id="text" placeholder="Description" required>
           <input type="number" id="amount" placeholder="Amount" required>
+        </div>
 
-          <select id="type">
+        <div class="row">
+          <select id="type" onchange="toggleCategory()">
             <option value="income">Income</option>
             <option value="expense">Expense</option>
           </select>
@@ -74,34 +78,27 @@
             <option value="necessities">Necessities</option>
             <option value="unwanted">Unwanted</option>
           </select>
+        </div>
 
-          <button>Add Transaction</button>
-        </form>
-      </div>
-
+        <button>Add Transaction</button>
+      </form>
     </div>
 
-    <!-- RIGHT -->
-    <div class="right">
-
-      <div class="card">
-        <h3>Income vs Expense</h3>
-        <canvas id="chart1"></canvas>
-      </div>
-
-      <div class="card">
-        <h3>Spending by Category</h3>
-        <canvas id="chart2"></canvas>
-      </div>
-
-      <div class="card">
-        <h3>Transactions</h3>
-        <ul id="list"></ul>
-      </div>
-
+    <div class="card">
+      <ul id="list"></ul>
     </div>
 
   </div>
+
+  <!-- INSIGHTS -->
+  <div id="insights" class="tab">
+    <div class="insight-grid">
+      <div class="card" id="topCategory"></div>
+      <div class="card" id="savingTip"></div>
+      <div class="card" id="dailyTip"></div>
+    </div>
+  </div>
+
 </div>
 
 <script src="script.js"></script>
